@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Failed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #ffebee, #ffcdd2); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: white; border-radius: 16px; padding: 48px; max-width: 560px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.1); text-align: center; }
+        .icon { font-size: 64px; margin-bottom: 16px; }
+        h1 { color: #c62828; margin-bottom: 12px; }
+        p { color: #555; line-height: 1.6; margin-bottom: 8px; }
+        .badge { display: inline-block; background: #ffebee; color: #c62828; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-top: 16px; }
+        .steps { text-align: left; margin-top: 24px; background: #fff8e1; padding: 16px 24px; border-radius: 8px; border-left: 4px solid #f9a825; }
+        .steps h3 { color: #f57f17; font-size: 15px; margin-bottom: 8px; }
+        .steps ol { padding-left: 18px; color: #555; font-size: 14px; line-height: 1.8; }
+        .links { margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .links a { text-decoration: none; color: #c62828; border: 1px solid #c62828; padding: 8px 20px; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
+        .links a:hover { background: #c62828; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">❌</div>
+        <h1>Pipeline Failed</h1>
+        <p>The Airflow Lab2 ML pipeline encountered an error or has not been run yet.</p>
+        <span class="badge">DAG: Airflow_Lab2 — Status: FAILED</span>
+        <div class="steps">
+            <h3>Troubleshooting</h3>
+            <ol>
+                <li>Check the Airflow UI at <code>localhost:8080</code></li>
+                <li>Review task logs for the failed task</li>
+                <li>Verify <code>advertising.csv</code> exists in dags/data/</li>
+                <li>Check SMTP config in <code>.env</code></li>
+            </ol>
+        </div>
+        <div class="links">
+            <a href="/api">JSON Status</a>
+            <a href="/health">Health Check</a>
+            <a href="/docs">API Docs</a>
+        </div>
+    </div>
+</body>
+</html>

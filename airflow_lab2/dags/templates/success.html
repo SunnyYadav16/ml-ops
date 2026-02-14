@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Success</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: white; border-radius: 16px; padding: 48px; max-width: 560px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.1); text-align: center; }
+        .icon { font-size: 64px; margin-bottom: 16px; }
+        h1 { color: #2e7d32; margin-bottom: 12px; }
+        p { color: #555; line-height: 1.6; margin-bottom: 8px; }
+        .badge { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-top: 16px; }
+        .links { margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .links a { text-decoration: none; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 20px; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
+        .links a:hover { background: #2e7d32; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">✅</div>
+        <h1>Pipeline Succeeded</h1>
+        <p>The Airflow Lab2 ML pipeline has completed all stages successfully.</p>
+        <span class="badge">DAG: Airflow_Lab2 — Status: SUCCESS</span>
+        <div class="links">
+            <a href="/api">JSON Status</a>
+            <a href="/health">Health Check</a>
+            <a href="/docs">API Docs</a>
+        </div>
+    </div>
+</body>
+</html>
