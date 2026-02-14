@@ -103,7 +103,7 @@ cd airflow_lab2
 ### 2. Create required directories
 
 ```bash
-mkdir -p ./logs
+mkdir -p ./logs ./plugins ./config
 ```
 
 ### 3. Configure environment variables
@@ -114,17 +114,25 @@ Edit the `.env` file:
 # .env
 AIRFLOW_UID=50000
 
+AIRFLOW_FERNET_KEY=FERNET_KEY
+AIRFLOW_SECRET_KEY=SECRET_KEY
+
 _AIRFLOW_WWW_USER_USERNAME=airflow
 _AIRFLOW_WWW_USER_PASSWORD=airflow
 
-# ── UPDATE THESE with your Gmail credentials ──
+POSTGRES_USER=airflow
+POSTGRES_PASSWORD=airflow
+POSTGRES_DB=airflow
+
 SMTP_USER=your-actual-email@gmail.com
 SMTP_PASSWORD=your-16-char-app-password
 SMTP_MAIL_FROM=your-actual-email@gmail.com
 
 NOTIFICATION_EMAIL_TO=others-actual-email@gmail.com
 
-AIRFLOW_CONN_SMTP_DEFAULT=smtp://YOUR_EMAIL%40gmail.com:YOUR_APP_PASSWORD@smtp.gmail.com:587?from_email=YOUR_EMAIL&disable_ssl=true
+# Format: smtp://USERNAME%40gmail.com:APP_PASSWORD@smtp.gmail.com:587?from_email=USERNAME%40gmail.com&disable_ssl=true
+# Note: @ in email must be URL-encoded as %40
+AIRFLOW_CONN_SMTP_DEFAULT=smtp://YOUR_EMAIL
 ```
 
 **To get the SMTP App Password:**
