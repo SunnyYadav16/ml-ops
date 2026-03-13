@@ -10,6 +10,8 @@ Hands-on lab projects from [Prof. Ramin Mohammadi's MLOps course](https://www.ml
 MlOps/
 ├── fastapi_lab/       # Lab 1 — ML model serving with FastAPI
 ├── airflow_lab2/      # Lab 2 — ML pipeline orchestration with Airflow 3.x
+├── docker_lab1/       # Lab 3 — Docker containerization
+├── data_lab/          # Lab 4 — LLM Data Pipeline
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
@@ -106,20 +108,52 @@ docker run -v $(pwd)/output:/app/output titanic-xgb:v1
 
 ---
 
+## Lab 4: LLM Data Pipeline
+
+**Directory:** [`data_lab/LLM_data_pipeline/`](./data_lab/LLM_data_pipeline/)
+
+An LLM data pipeline that ingests data from arXiv and HackerNews, generates embeddings using Sentence Transformers, stores them in ChromaDB, performs neural topic modeling with BERTopic, and visualizes the corpus with a Plotly dashboard.
+
+| Aspect | Details |
+|---|---|
+| Data Source | arXiv papers + HackerNews (dual-source) |
+| Embeddings | Sentence Transformers (`all-MiniLM-L6-v2`) |
+| Vector Store | ChromaDB (persistent, metadata-rich) |
+| Topic Analysis | BERTopic (neural topic modeling) |
+| Dashboard & Search | Plotly interactive dashboard & live cosine-similarity search demo |
+
+**Run it:**
+
+> **Note:** To run this lab in Google Colab, upload the `Lab1_Enhanced.ipynb` notebook directly to [Google Colab](https://colab.research.google.com/).
+
+```bash
+cd data_lab/LLM_data_pipeline
+pip install arxiv requests sentence-transformers chromadb \
+    bertopic umap-learn hdbscan plotly pandas numpy \
+    scikit-learn nltk tqdm numba
+```
+
+Then open and run `Lab1_Enhanced.ipynb` top to bottom. No API keys required.
+
+---
+
 ## Technologies
 
-| Technology | Lab 1 | Lab 2 | Lab 3 |
-|---|---|---|---|
-| Python 3.12 | ✅ | ✅ | ✅ |
-| FastAPI | ✅ serving | ✅ monitoring | — |
-| scikit-learn | ✅ Random Forest | ✅ Logistic Regression | — |
-| XGBoost | — | — | ✅ |
-| Apache Airflow 3.x | — | ✅ | — |
-| Docker | — | ✅ | ✅ |
-| Docker Compose | — | ✅ | — |
-| PostgreSQL | — | ✅ | — |
-| Gmail SMTP | — | ✅ | — |
-| JWT Authentication | — | ✅ | — |
+| Technology | LLM Data Pipeline | FastAPI Lab | Airflow Lab | Docker Lab |
+|---|---|---|---|---|
+| Python 3.12 | ✅ | ✅ | ✅ | ✅ |
+| ChromaDB & BERTopic | ✅ | — | — | — |
+| Sentence Transformers| ✅ | — | — | — |
+| Plotly | ✅ | — | — | — |
+| FastAPI | — | ✅ serving | ✅ monitoring | — |
+| scikit-learn | ✅ | ✅ Random Forest | ✅ Logistic Regression | — |
+| XGBoost | — | — | — | ✅ |
+| Apache Airflow 3.x | — | — | ✅ | — |
+| Docker | — | — | ✅ | ✅ |
+| Docker Compose | — | — | ✅ | — |
+| PostgreSQL | — | — | ✅ | — |
+| Gmail SMTP | — | — | ✅ | — |
+| JWT Authentication | — | — | ✅ | — |
 ```
 ---
 
