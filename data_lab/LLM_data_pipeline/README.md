@@ -75,10 +75,3 @@ Then open and run `Lab1_Enhanced.ipynb` top to bottom. No API keys required.
 **Quality scoring** — A computed `quality_score (0–1)` per article combines word count, source credibility, and HN community score. This becomes a first-class metadata field in ChromaDB, usable downstream for RAG retrieval filtering or fine-tuning data curation.
 
 ---
-
-## Next Steps
-
-- Wrap each stage in an **Airflow DAG** for scheduled re-ingestion
-- Add **DVC** to version the cleaned corpus snapshots
-- Expose ChromaDB via a **FastAPI** endpoint for live RAG serving
-- Add **data drift detection** (e.g. Evidently) to monitor embedding distribution shifts over time
