@@ -12,6 +12,7 @@ MlOps/
 ├── airflow_lab2/      # Lab 2 — ML pipeline orchestration with Airflow 3.x
 ├── docker_lab1/       # Lab 3 — Docker containerization
 ├── data_lab/          # Lab 4 — LLM Data Pipeline
+├── githublabs_lab2/   # Lab 5 — GitHub Actions CI/CD for ML
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
@@ -137,23 +138,57 @@ Then open and run `Lab1_Enhanced.ipynb` top to bottom. No API keys required.
 
 ---
 
+## Lab 5: GitHub Actions — Customer Churn CI/CD Pipeline
+
+**Directory:** [`githublabs_lab2/`](./githublabs_lab2/)
+
+An automated ML CI/CD pipeline using **GitHub Actions** that trains an XGBoost classifier on the IBM Telco Customer Churn dataset, runs a pytest suite, and enforces an F1 quality gate before committing the model — all triggered on every push to main.
+
+This is a modified version of the [original GitHub Actions Lab 2](https://github.com/raminmohammadi/MLOps/tree/main/Labs/Github_Labs/Lab2). Key changes from the original: real Telco Churn dataset replaces synthetic `make_classification` data, XGBoost replaces Random Forest/LightGBM, the single flat workflow is replaced with a **3-job pipeline** (`train → test ∥ evaluate`) with artifact passing between jobs, a hard F1 quality gate blocks commits on underperforming models, and a FastAPI inference endpoint is added.
+
+| Aspect | Details |
+|---|---|
+| Model | XGBClassifier with `scale_pos_weight` for class imbalance |
+| Dataset | IBM Telco Customer Churn — 7,043 rows, 19 features, binary churn label |
+| CI/CD | GitHub Actions — 3 jobs: train → (test ∥ evaluate) |
+| Quality Gate | F1 ≥ 0.60 required; job exits code 1 and blocks commit if not met |
+| Inference | FastAPI with `/predict`, `/batch_predict`, `/health` endpoints |
+| Tests | 17 pytest tests — schema, preprocessing, model artifact, API endpoints |
+| Versioning | Each model saved as `model_<timestamp>.joblib`, metrics as `<timestamp>_metrics.json` |
+
+**Run it locally:**
+```bash
+cd githublabs_lab2
+pip install -r requirements.txt
+
+TIMESTAMP=$(date '+%Y%m%d%H%M%S')
+python src/train_model.py --timestamp $TIMESTAMP --data data/WA_Fn-UseC_-Telco-Customer-Churn.csv
+python src/evaluate_model.py --timestamp $TIMESTAMP
+pytest test/test_pipeline.py -v
+uvicorn src.app:app --reload --port 8000   # API at localhost:8000/docs
+```
+
+> **Dataset:** Download `WA_Fn-UseC_-Telco-Customer-Churn.csv` from [Kaggle](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) and place it in `githublabs_lab2/data/`.
+
 ## Technologies
 
-| Technology | LLM Data Pipeline | FastAPI Lab | Airflow Lab | Docker Lab |
-|---|---|---|---|---|
-| Python 3.12 | ✅ | ✅ | ✅ | ✅ |
-| ChromaDB & BERTopic | ✅ | — | — | — |
-| Sentence Transformers| ✅ | — | — | — |
-| Plotly | ✅ | — | — | — |
-| FastAPI | — | ✅ serving | ✅ monitoring | — |
-| scikit-learn | ✅ | ✅ Random Forest | ✅ Logistic Regression | — |
-| XGBoost | — | — | — | ✅ |
-| Apache Airflow 3.x | — | — | ✅ | — |
-| Docker | — | — | ✅ | ✅ |
-| Docker Compose | — | — | ✅ | — |
-| PostgreSQL | — | — | ✅ | — |
-| Gmail SMTP | — | — | ✅ | — |
-| JWT Authentication | — | — | ✅ | — |
+| Technology | LLM Data Pipeline | FastAPI Lab | Airflow Lab | Docker Lab | GitHub Actions Lab |
+|---|---|---|---|---|---|
+| Python 3.12 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ChromaDB & BERTopic | ✅ | — | — | — | — |
+| Sentence Transformers| ✅ | — | — | — | — |
+| Plotly | ✅ | — | — | — | — |
+| FastAPI | — | ✅ serving | ✅ monitoring | — | ✅ inference |
+| scikit-learn | ✅ | ✅ Random Forest | ✅ Logistic Regression | — | — |
+| XGBoost | — | — | — | ✅ | ✅ |
+| Apache Airflow 3.x | — | — | ✅ | — | — |
+| Docker | — | — | ✅ | ✅ | — |
+| Docker Compose | — | — | ✅ | — | — |
+| PostgreSQL | — | — | ✅ | — | — |
+| Gmail SMTP | — | — | ✅ | — | — |
+| JWT Authentication | — | — | ✅ | — | — |
+| GitHub Actions | — | — | — | — | ✅ |
+| pytest | — | — | — | — | ✅ |
 ```
 ---
 
