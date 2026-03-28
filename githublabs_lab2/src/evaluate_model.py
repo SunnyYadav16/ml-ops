@@ -84,8 +84,8 @@ if __name__ == "__main__":
     # Enforce quality gate
     if not gate_passed:
         print(
-            f"\n[evaluate] ❌ GATE FAILED: F1={f1} < threshold={F1_THRESHOLD}"
+            f"\n[evaluate] GATE FAILED: F1={f1} < threshold={F1_THRESHOLD}"
         )
         sys.exit(1)
 
-    print(f"\n[evaluate] ✅ GATE PASSED: F1={f1} >= threshold={F1_THRESHOLD}")
+    print(f"\n[evaluate] GATE PASSED: F1={f1} >= threshold={F1_THRESHOLD}")
