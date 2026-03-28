@@ -1,0 +1,206 @@
+name: Customer Churn — Train → Test → Evaluate
+
+# Trigger on every push to main, or manually via the Actions tab
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: TRAIN
+  # Trains an XGBoost model on the Telco Churn dataset.
+  # Uploads model + test split as a GitHub Actions artifact for downstream jobs.
+  # ─────────────────────────────────────────────────────────────────────────
+  train:
+    name: "Train XGBoost Model"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r githublabs_lab2_sunny/requirements.txt
+
+      - name: Generate timestamp (model version)
+        id: ts
+        run: |
+          TS=$(date '+%Y%m%d%H%M%S')
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          echo "Timestamp: $TS"
+
+      - name: Train model
+        working-directory: githublabs_lab2_sunny
+        run: |
+          python src/train_model.py \
+            --timestamp "${{ steps.ts.outputs.timestamp }}" \
+            --data "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+
+      - name: Upload model + data artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: churn-model-${{ steps.ts.outputs.timestamp }}
+          path: |
+            githublabs_lab2_sunny/models/
+            githublabs_lab2_sunny/data/test_split.parquet
+          retention-days: 7
+
+      # Pass timestamp to downstream jobs via artifact
+      - name: Save timestamp for downstream jobs
+        run: echo "${{ steps.ts.outputs.timestamp }}" > /tmp/timestamp.txt
+
+      - name: Upload timestamp artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-timestamp
+          path: /tmp/timestamp.txt
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: TEST
+  # Runs pytest against the trained model artifact.
+  # Runs in parallel with the evaluate job, both depend on train.
+  # ─────────────────────────────────────────────────────────────────────────
+  test:
+    name: "Run Pytest Suite"
+    runs-on: ubuntu-latest
+    needs: train   # waits for train to finish before starting
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r githublabs_lab2_sunny/requirements.txt
+
+      - name: Read timestamp
+        id: ts
+        run: |
+          # Download timestamp artifact
+          echo "Will be set after artifact download"
+
+      - name: Download timestamp artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: run-timestamp
+          path: /tmp/
+
+      - name: Download model artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: churn-model-*
+          merge-multiple: true
+          path: githublabs_lab2_sunny/
+
+      - name: Display downloaded files
+        run: ls -R githublabs_lab2_sunny/models/
+
+      - name: Run pytest
+        working-directory: githublabs_lab2_sunny
+        run: |
+          pytest test/test_pipeline.py \
+            --tb=short \
+            --junitxml=test-results.xml \
+            -v
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()   # upload even if tests fail so we can inspect results
+        with:
+          name: pytest-results
+          path: githublabs_lab2_sunny/test-results.xml
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 3: EVALUATE
+  # Runs evaluation with an F1 quality gate.
+  # If F1 < 0.60 the job fails and the model is NOT committed.
+  # Runs in parallel with test, both depend on train.
+  # ─────────────────────────────────────────────────────────────────────────
+  evaluate:
+    name: "Evaluate Model (F1 Gate)"
+    runs-on: ubuntu-latest
+    needs: train   # waits for train to finish before starting
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r githublabs_lab2_sunny/requirements.txt
+
+      - name: Download timestamp artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: run-timestamp
+          path: /tmp/
+
+      - name: Read timestamp
+        id: ts
+        run: |
+          TS=$(cat /tmp/timestamp.txt)
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          echo "Timestamp: $TS"
+
+      - name: Download model + data artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: churn-model-*
+          merge-multiple: true
+          path: githublabs_lab2_sunny/
+
+      - name: Evaluate model (F1 gate enforced)
+        working-directory: githublabs_lab2_sunny
+        run: |
+          python src/evaluate_model.py \
+            --timestamp "${{ steps.ts.outputs.timestamp }}"
+
+      - name: Commit metrics + model to repository
+        if: success()   # only commit if the gate passed
+        run: |
+          TS="${{ steps.ts.outputs.timestamp }}"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          git add -f \
+            "githublabs_lab2_sunny/metrics/${TS}_metrics.json" \
+            "githublabs_lab2_sunny/models/model_${TS}.joblib" \
+            "githublabs_lab2_sunny/models/feature_schema.json"
+
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: add model v${TS} and metrics [skip ci]"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-metrics
+          path: githublabs_lab2_sunny/metrics/
+          retention-days: 30
