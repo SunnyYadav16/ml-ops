@@ -83,4 +83,4 @@ python -m spacy download en_core_web_sm
 
 ## Running
 
-Open `yelpReviews.ipynb` in Jupyter and run all cells top to bottom.
+Open `yelpReviews.ipynb` in Colab and run all cells top to bottom.
