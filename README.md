@@ -8,11 +8,12 @@ Hands-on lab projects from [Prof. Ramin Mohammadi's MLOps course](https://www.ml
 
 ```
 MlOps/
-├── fastapi_lab/       # Lab 1 — ML model serving with FastAPI
-├── airflow_lab2/      # Lab 2 — ML pipeline orchestration with Airflow 3.x
-├── docker_lab1/       # Lab 3 — Docker containerization
-├── data_lab/          # Lab 4 — LLM Data Pipeline
-├── githublabs_lab2/   # Lab 5 — GitHub Actions CI/CD for ML
+├── fastapi_lab/              # Lab 1 — ML model serving with FastAPI
+├── airflow_lab2/             # Lab 2 — ML pipeline orchestration with Airflow 3.x
+├── docker_lab1/              # Lab 3 — Docker containerization
+├── data_lab/                 # Lab 4 — LLM Data Pipeline
+├── githublabs_lab2/          # Lab 5 — GitHub Actions CI/CD for ML
+├── snorkel_lab/              # Lab 6 — Weak supervision with Snorkel
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
@@ -90,13 +91,13 @@ Containerizes an ML training pipeline that downloads & preprocesses the Titanic 
 
 This is a modified version of the [original Docker Lab 1](https://github.com/raminmohammadi/MLOps/tree/main/Labs/Docker_Labs/Lab_1). Key changes from the original: Titanic dataset replaces Iris, XGBoost replaces Random Forest, full evaluation metrics added, volume mount for artifact persistence, and `python:3.10-slim` base image.
 
-| Aspect | Details                                                                                           |
-|---|---------------------------------------------------------------------------------------------------|
-| Model | XGBClassifier with tuned hyperparameters                                                          |
+| Aspect | Details |
+|---|---|
+| Model | XGBClassifier with tuned hyperparameters |
 | Dataset | Titanic: survival prediction with feature engineering (FamilySize, IsAlone, categorical encoding) |
-| Evaluation | Accuracy, Precision, Recall, F1, ROC AUC, Confusion Matrix                                        |
-| Infrastructure | Docker with volume mounts for model + metrics persistence                                         |
-| Key Files | `src/main.py` (training script), `Dockerfile`, `src/requirements.txt`                             |
+| Evaluation | Accuracy, Precision, Recall, F1, ROC AUC, Confusion Matrix |
+| Infrastructure | Docker with volume mounts for model + metrics persistence |
+| Key Files | `src/main.py` (training script), `Dockerfile`, `src/requirements.txt` |
 
 **Run it:**
 
@@ -170,26 +171,69 @@ uvicorn src.app:app --reload --port 8000   # API at localhost:8000/docs
 
 > **Dataset:** Download `WA_Fn-UseC_-Telco-Customer-Churn.csv` from [Kaggle](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) and place it in `githublabs_lab2/data/`.
 
+---
+
+## Lab 6: Data Labeling — Weak Supervision with Snorkel on Yelp Reviews
+
+**Directory:** [`datalabeling_snorkel/`](./datalabeling_snorkel/)
+
+A complete **weak supervision pipeline** using [Snorkel](https://www.snorkel.org/) to classify Yelp restaurant and business reviews as positive or negative without any hand-labeled training data. Nine heuristic labeling functions encode domain knowledge about the service/food review domain; Snorkel's `LabelModel` combines their noisy votes into probabilistic labels; a Logistic Regression classifier is trained on those labels; and synonym-based data augmentation via SpaCy + WordNet expands the training set to further boost accuracy.
+
+| Aspect | Details |
+|---|---|
+| Dataset | [`yelp_polarity`](https://huggingface.co/datasets/yelp_polarity) — Yelp restaurant & business reviews, binary sentiment |
+| Labeling Functions | 9 LFs: keyword heuristics, phrase patterns, star-rating regex, exclamation density, ALL-CAPS detection, review length signal, TextBlob polarity |
+| Label Model | Snorkel `LabelModel` — learns LF reliability without ground truth |
+| Classifier | Logistic Regression on bag-of-bigrams (CountVectorizer, 10k features) |
+| Augmentation | SpaCy + WordNet synonym replacement (adjectives, verbs, nouns) via `MeanFieldPolicy` |
+| Key File | `yelpReviews.ipynb` (Colab-compatible) |
+
+**Results:**
+
+| Model | Accuracy |
+|---|---|
+| Majority Vote (baseline) | ~72% |
+| Snorkel LabelModel | ~74% |
+| Logistic Regression (weak labels) | ~77% |
+| Logistic Regression (augmented) | ~83–85% |
+
+**Run it in Colab:**
+
+Open [`datalabeling_snorkel/yelpReviews.ipynb`](./datalabeling_snorkel/yelpReviews.ipynb) in [Google Colab](https://colab.research.google.com/), then run the install cell at the top:
+
+```python
+!pip install snorkel datasets textblob spacy -q
+!python -m textblob.download_corpora
+!python -m spacy download en_core_web_sm
+```
+
+Then run all cells top to bottom. No API keys or local data download required — the dataset streams from Hugging Face.
+
+---
+
 ## Technologies
 
-| Technology | LLM Data Pipeline | FastAPI Lab | Airflow Lab | Docker Lab | GitHub Actions Lab |
-|---|---|---|---|---|---|
-| Python 3.12 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ChromaDB & BERTopic | ✅ | — | — | — | — |
-| Sentence Transformers| ✅ | — | — | — | — |
-| Plotly | ✅ | — | — | — | — |
-| FastAPI | — | ✅ serving | ✅ monitoring | — | ✅ inference |
-| scikit-learn | ✅ | ✅ Random Forest | ✅ Logistic Regression | — | — |
-| XGBoost | — | — | — | ✅ | ✅ |
-| Apache Airflow 3.x | — | — | ✅ | — | — |
-| Docker | — | — | ✅ | ✅ | — |
-| Docker Compose | — | — | ✅ | — | — |
-| PostgreSQL | — | — | ✅ | — | — |
-| Gmail SMTP | — | — | ✅ | — | — |
-| JWT Authentication | — | — | ✅ | — | — |
-| GitHub Actions | — | — | — | — | ✅ |
-| pytest | — | — | — | — | ✅ |
-```
+| Technology | LLM Pipeline | FastAPI | Airflow | Docker | GitHub Actions | Snorkel |
+|---|---|---|---|---|---|---|
+| Python 3.12 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ChromaDB & BERTopic | ✅ | — | — | — | — | — |
+| Sentence Transformers | ✅ | — | — | — | — | — |
+| Plotly | ✅ | — | — | — | — | — |
+| FastAPI | — | ✅ serving | ✅ monitoring | — | ✅ inference | — |
+| scikit-learn | ✅ | ✅ Random Forest | ✅ Logistic Regression | — | — | ✅ Logistic Regression |
+| XGBoost | — | — | — | ✅ | ✅ | — |
+| Snorkel | — | — | — | — | — | ✅ |
+| SpaCy + WordNet | — | — | — | — | — | ✅ |
+| TextBlob | — | — | — | — | — | ✅ |
+| Apache Airflow 3.x | — | — | ✅ | — | — | — |
+| Docker | — | — | ✅ | ✅ | — | — |
+| Docker Compose | — | — | ✅ | — | — | — |
+| PostgreSQL | — | — | ✅ | — | — | — |
+| Gmail SMTP | — | — | ✅ | — | — | — |
+| JWT Authentication | — | — | ✅ | — | — | — |
+| GitHub Actions | — | — | — | — | ✅ | — |
+| pytest | — | — | — | — | ✅ | — |
+
 ---
 
 ## Credits
